@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "666230690370",
+    "project_id": "forge-59e0e",
+    "storage_bucket": "forge-59e0e.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:666230690370:android:f59beef496bc12f6bed3db",
+        "android_client_info": {
+          "package_name": "forge.com.forge"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDFrOMaDdMJCndqYdtqvyjZ_wD_vkfalQE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
