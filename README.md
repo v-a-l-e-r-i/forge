@@ -383,8 +383,7 @@ flutterfire configure
 
 ### Приклад тестового квесту в Firestore
 
-```json
-// tasks/quest_001
+
 {
   "title": "Setup dev environment",
   "description": "Install Flutter and run the app",
