@@ -42,16 +42,25 @@ class TaskService {
     );
   }
 
-  /// Лише вільні таски
+  /// Лише вільні таски.
+  ///
+  /// ВАЖЛИВО: фільтруємо "вільність" на клієнті через Task.isOpen, а не
+  /// через .where('isCompleted', isEqualTo: false) у запиті. Firestore
+  /// виключає з результатів рівності документи, в яких поля взагалі немає
+  /// (а не лише ті, де воно == true) — а квести, створені в адмінці, пишуть
+  /// лише `status`, без `isCompleted`. Композитний фільтр по `isCompleted`
+  /// їх просто не бачив, тому вони не показувались у "New". Фільтр по
+  /// `assigneeId` лишаємо в запиті — це поле пишеться завжди й з обох боків.
   Stream<List<Task>> watchAvailableTasks() {
     return _tasks
         .where('assigneeId', isEqualTo: '')
-        .where('isCompleted', isEqualTo: false)
         .orderBy('createdAt', descending: true)
         .snapshots()
         .map(
-          (snapshot) =>
-          snapshot.docs.map((doc) => Task.fromFirestore(doc)).toList(),
+          (snapshot) => snapshot.docs
+          .map((doc) => Task.fromFirestore(doc))
+          .where((task) => !task.isCompleted && !task.pendingApproval)
+          .toList(),
     );
   }
 
@@ -67,9 +76,11 @@ class TaskService {
   }) async {
     final batch = _firestore.batch();
 
-    // 1. Оновлюємо документ таски
+    // 1. Оновлюємо документ таски (status тримаємо в парі з assigneeId,
+    //    щоб адмінка й мобільний бачили той самий стан).
     batch.update(_tasks.doc(taskId), {
       'assigneeId': userId,
+      'status': 'assigned',
     });
 
     // 2. Збільшуємо кількість активних тасок у користувача
@@ -81,34 +92,28 @@ class TaskService {
     await batch.commit();
   }
 
-  /// Завершити таск
-  Future<void> completeTask({
-    required String taskId,
-    required String userId,
-    required int points,
-  }) async {
-    final batch = _firestore.batch();
-
-    // 1. Помічаємо таску як завершену
-    batch.update(_tasks.doc(taskId), {
-      'isCompleted': true,
+  /// Здати таск на перевірку адміну.
+  ///
+  /// Це НЕ завершує таск і НЕ нараховує XP — таск лише переходить у
+  /// 'pendingApproval' і чекає на підтвердження. Фактичне завершення,
+  /// нарахування XP та оновлення лічильників користувача виконується
+  /// виключно на боці адміна, у QuestBoardService.approveQuest() —
+  /// свідомо єдине місце, де це відбувається, щоб герой не міг
+  /// самостійно "завершити" квест і нарахувати собі очки.
+  ///
+  /// Якщо адмін відхилить заявку — QuestBoardService.reopenQuest()
+  /// поверне таск у 'available' і зніме виконавця.
+  Future<void> submitForApproval(String taskId) async {
+    await _tasks.doc(taskId).update({
+      'status': 'pendingApproval',
     });
-
-    // 2. Додаємо XP та змінюємо лічильники користувача
-    final userRef = _firestore.collection('users').doc(userId);
-    batch.update(userRef, {
-      'xp': FieldValue.increment(points),              // Додаємо очки за завдання
-      'completedTaskCount': FieldValue.increment(1),   // +1 до завершених
-      'activeTaskCount': FieldValue.increment(-1),     // -1 від активних
-    });
-
-    await batch.commit();
   }
 
   /// Зняти виконавця
   Future<void> unassignTask(String taskId) async {
     await _tasks.doc(taskId).update({
       'assigneeId': '',
+      'status': 'available',
     });
   }
 

@@ -1,5 +1,5 @@
-import 'dart:io';
-
+import 'dart:io' show File;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
@@ -30,7 +30,7 @@ class _RegisterPageState extends State<RegisterPage> {
   final _sloganController = TextEditingController();
   final _primarySkillController = TextEditingController();
 
-  File? _profileImage;
+  XFile? _profileImage;
 
   int _currentPage = 0;
   bool _isLoading = false;
@@ -53,14 +53,11 @@ class _RegisterPageState extends State<RegisterPage> {
     final picker = ImagePicker();
     final pickedFile = await picker.pickImage(
       source: ImageSource.gallery,
-      maxWidth: 800, // Обмежуємо розмір для економії пам'яті
+      maxWidth: 800,
       imageQuality: 80,
     );
-
     if (pickedFile != null) {
-      setState(() {
-        _profileImage = File(pickedFile.path);
-      });
+      setState(() => _profileImage  = pickedFile);
     }
   }
 
@@ -127,7 +124,7 @@ class _RegisterPageState extends State<RegisterPage> {
         firstName: _firstNameController.text.trim(),
         middleName: _middleNameController.text.trim(),
         lastName: _lastNameController.text.trim(),
-        uploadedImageUrl: _profileImage!.path.trim(),
+        avatarImage: _profileImage,
         slogan: _sloganController.text.trim(),
         abilitiesText: _parseSkills(_primarySkillController.text),
       );
@@ -170,8 +167,10 @@ class _RegisterPageState extends State<RegisterPage> {
       _currentPage = 0;     // Повертаємо лічильник на перший крок
     });
 
-    // Миттєво перекидаємо PageView на першу сторінку без анімації
-    _pageController.jumpToPage(0);
+    // Миттєво перекидаємо PageView на першу сторінку, якщо контролер підключений
+    if (_pageController.hasClients) {
+      _pageController.jumpToPage(0);
+    }
   }
 
   @override
@@ -500,8 +499,13 @@ class _RegisterPageState extends State<RegisterPage> {
                   ),
                   child: _profileImage != null
                       ? ClipOval(
-                    child: Image.file(
-                      _profileImage!,
+                    child: kIsWeb
+                        ? Image.network(
+                      _profileImage!.path,
+                      fit: BoxFit.cover,
+                    )
+                        : Image.file(
+                      File(_profileImage!.path),
                       fit: BoxFit.cover,
                     ),
                   )

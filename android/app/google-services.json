@@ -7,12 +7,17 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:666230690370:android:f59beef496bc12f6bed3db",
+        "mobilesdk_app_id": "1:666230690370:android:2416ab9c753651a5bed3db",
         "android_client_info": {
-          "package_name": "forge.com.forge"
+          "package_name": "com.example.forge_admin"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "666230690370-1delikpc42mo1ho83i12eq9tkqaomjqn.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyDFrOMaDdMJCndqYdtqvyjZ_wD_vkfalQE"
@@ -20,7 +25,55 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "666230690370-1delikpc42mo1ho83i12eq9tkqaomjqn.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "666230690370-4rl5q2lnvqbc0ur6j01k4ok0qedlqha4.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "forge.com.forge"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:666230690370:android:f59beef496bc12f6bed3db",
+        "android_client_info": {
+          "package_name": "forge.com.forge"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "666230690370-1delikpc42mo1ho83i12eq9tkqaomjqn.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDFrOMaDdMJCndqYdtqvyjZ_wD_vkfalQE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "666230690370-1delikpc42mo1ho83i12eq9tkqaomjqn.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "666230690370-4rl5q2lnvqbc0ur6j01k4ok0qedlqha4.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "forge.com.forge"
+              }
+            }
+          ]
         }
       }
     }

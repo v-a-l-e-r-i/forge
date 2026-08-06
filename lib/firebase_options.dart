@@ -17,10 +17,7 @@ import 'package:flutter/foundation.dart'
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
     if (kIsWeb) {
-      throw UnsupportedError(
-        'DefaultFirebaseOptions have not been configured for web - '
-        'you can reconfigure this by running the FlutterFire CLI again.',
-      );
+      return web;
     }
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
@@ -28,10 +25,7 @@ class DefaultFirebaseOptions {
       case TargetPlatform.iOS:
         return ios;
       case TargetPlatform.macOS:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for macos - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return macos;
       case TargetPlatform.windows:
         return windows;
       case TargetPlatform.linux:
@@ -53,13 +47,13 @@ class DefaultFirebaseOptions {
     projectId: 'forge-59e0e',
     storageBucket: 'forge-59e0e.firebasestorage.app',
   );
-
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyC1syQGWI_WOuKgIID06r0NjnkbQI33lYU',
     appId: '1:666230690370:ios:922961e1cdbd7c7cbed3db',
     messagingSenderId: '666230690370',
     projectId: 'forge-59e0e',
     storageBucket: 'forge-59e0e.firebasestorage.app',
+    iosClientId: '666230690370-4rl5q2lnvqbc0ur6j01k4ok0qedlqha4.apps.googleusercontent.com',
     iosBundleId: 'forge.com.forge',
   );
 
@@ -71,5 +65,24 @@ class DefaultFirebaseOptions {
     authDomain: 'forge-59e0e.firebaseapp.com',
     storageBucket: 'forge-59e0e.firebasestorage.app',
     measurementId: 'G-49NYZC12R0',
+  );
+  static const FirebaseOptions web = FirebaseOptions(
+    apiKey: 'AIzaSyChNut-1UU6pPdUOI_U-bVyuBieKzlqfsk',
+    appId: '1:666230690370:web:b217e6b0e312cc17bed3db',
+    messagingSenderId: '666230690370',
+    projectId: 'forge-59e0e',
+    authDomain: 'forge-59e0e.firebaseapp.com',
+    storageBucket: 'forge-59e0e.firebasestorage.app',
+    measurementId: 'G-87GR27Z927',
+  );
+
+  static const FirebaseOptions macos = FirebaseOptions(
+    apiKey: 'AIzaSyC1syQGWI_WOuKgIID06r0NjnkbQI33lYU',
+    appId: '1:666230690370:ios:922961e1cdbd7c7cbed3db',
+    messagingSenderId: '666230690370',
+    projectId: 'forge-59e0e',
+    storageBucket: 'forge-59e0e.firebasestorage.app',
+    iosClientId: '666230690370-4rl5q2lnvqbc0ur6j01k4ok0qedlqha4.apps.googleusercontent.com',
+    iosBundleId: 'forge.com.forge',
   );
 }

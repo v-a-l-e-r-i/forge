@@ -67,6 +67,7 @@ class AppUser {
 
   factory AppUser.fromFirestore(DocumentSnapshot<Map<String, dynamic>> doc) {
     final data = doc.data() ?? {};
+    final rawTeamId = data['teamId'] as String?;
     return AppUser(
       id: doc.id,
       nickname: data['nickname'] as String? ?? '',
@@ -78,7 +79,10 @@ class AppUser {
       role: UserRole.fromFirestore(data['role'] as String? ?? 'employee'),
       level: data['level'] as int? ?? 1,
       xp: data['xp'] as int? ?? 0,
-      teamId: data['teamId'] as String?,
+      // Порожній рядок трактуємо як "немає команди", інакше нижче по
+      // ланцюжку хтось викличе _teams.doc('') і впаде з
+      // "document path must be a non-empty string".
+      teamId: (rawTeamId != null && rawTeamId.isNotEmpty) ? rawTeamId : null,
       activeTaskCount: data['activeTaskCount'] as int? ?? 0,
       completedTaskCount: data['completedTaskCount'] as int? ?? 0,
       createdAt: _parseTimestamp(data['createdAt']) ?? DateTime.now(),

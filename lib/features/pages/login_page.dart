@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../services/auth_service.dart';
+import '../../widgets/forge_brand_card.dart';
+import '../../widgets/forge_logo.dart';
 import 'register_page.dart';
 
 class LoginPage extends StatefulWidget {
@@ -17,6 +19,8 @@ class _LoginPageState extends State<LoginPage> {
   final passwordController = TextEditingController();
 
   bool loading = false;
+  bool _obscurePassword = true;
+  bool _isSubmitting = false;
 
   Future<void> login() async {
     final nickname = nicknameController.text.trim();
@@ -74,13 +78,14 @@ class _LoginPageState extends State<LoginPage> {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
 
-    InputDecoration buildLoginInputDecoration(String label, IconData icon) {
+    InputDecoration buildLoginInputDecoration(String label, IconData icon, IconButton? leftIcon) {
       return InputDecoration(
         labelText: label,
         labelStyle: TextStyle(
           color: colors.secondary.withValues(alpha: 0.7),
         ),
         prefixIcon: Icon(icon, color: colors.secondary.withValues(alpha: 0.5)),
+        suffixIcon: leftIcon,
         filled: true,
         fillColor: colors.surface,
         border: OutlineInputBorder(
@@ -111,22 +116,17 @@ class _LoginPageState extends State<LoginPage> {
               child: SizedBox(
                 width: 360,
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Icon(
-                      Icons.layers_rounded,
-                      size: 64,
-                      color: colors.primary,
-                    ),
+                    ForgeLogo(size: 72, onTap: () => showForgeBrandCard(context)),
                     const SizedBox(height: 16),
                     Text(
                       'FORGE',
-                      textAlign: TextAlign.center,
                       style: TextStyle(
-                        fontSize: 36,
-                        fontWeight: FontWeight.bold,
+                        fontSize: 26,
+                        fontWeight: FontWeight.w800,
                         letterSpacing: 4,
-                        color: colors.onSurface,
+                        color: theme.colorScheme.primary,
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -139,23 +139,50 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                     ),
                     const SizedBox(height: 40),
-                    TextField(
+                    TextFormField(
                       controller: nicknameController,
-                      style: TextStyle(color: colors.onSurface),
+                      keyboardType: TextInputType.text,
+                      autofillHints: const [AutofillHints.username],
                       decoration: buildLoginInputDecoration(
-                        'Nickname',
-                        Icons.person_outline,
+                        'Логін',
+                        Icons.person,
+                        null
                       ),
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return 'Введіть ваш логін';
+                        }
+                        return null;
+                      },
+                      enabled: !_isSubmitting,
                     ),
                     const SizedBox(height: 16),
-                    TextField(
+                    TextFormField(
                       controller: passwordController,
-                      obscureText: true,
-                      style: TextStyle(color: colors.onSurface),
+                      obscureText: _obscurePassword,
+                      autofillHints: const [AutofillHints.password],
+
                       decoration: buildLoginInputDecoration(
-                        'Password',
+                        'Пароль',
                         Icons.lock_outline,
+                        IconButton(
+                          icon: Icon(
+                            _obscurePassword
+                                ? Icons.visibility_outlined
+                                : Icons.visibility_off_outlined,
+                            color: colors.onInverseSurface,
+                          ),
+                          onPressed: () => setState(
+                                  () => _obscurePassword = !_obscurePassword),
+                        ),
                       ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Введіть ваш пароль';
+                        }
+                        return null;
+                      },
+                      enabled: !_isSubmitting,
                     ),
                     const SizedBox(height: 28),
                     SizedBox(

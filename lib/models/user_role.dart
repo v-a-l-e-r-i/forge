@@ -8,7 +8,7 @@ enum UserRole {
       case UserRole.employee:
         return 'employee';
       case UserRole.teamLead:
-        return 'team_lead';
+        return 'teamLead';
       case UserRole.admin:
         return 'admin';
     }
@@ -16,7 +16,7 @@ enum UserRole {
 
   static UserRole fromFirestore(String value) {
     switch (value) {
-      case 'team_lead':
+      case 'teamLead':
         return UserRole.teamLead;
       case 'admin':
         return UserRole.admin;
@@ -31,7 +31,7 @@ enum UserRole {
       case UserRole.employee:
         return 'Employee';
       case UserRole.teamLead:
-        return 'Team lead';
+        return 'Team Lead';
       case UserRole.admin:
         return 'Admin';
     }

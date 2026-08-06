@@ -1,16 +1,19 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:forge/features/pages/tasks_page.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 import '../../models/app_user.dart';
 import '../../models/character.dart';
+import '../../models/team.dart';
 import '../../services/auth_service.dart';
-import '../theme/theme_provider.dart';
+import '../../services/user_service.dart';
 
-class HomePage extends StatelessWidget {
-  const HomePage({super.key});
+/// Вміст сторінки профілю — без Scaffold/AppBar, бо їх тепер надає
+/// AppShell. Використовується як один із табів у shell.
+class HomeBody extends StatelessWidget {
+  const HomeBody({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -22,9 +25,7 @@ class HomePage extends StatelessWidget {
         final user = userSnapshot.data;
 
         if (user == null) {
-          return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
-          );
+          return const Center(child: CircularProgressIndicator());
         }
 
         return StreamBuilder<Character?>(
@@ -32,43 +33,11 @@ class HomePage extends StatelessWidget {
           builder: (context, charSnapshot) {
             final character = charSnapshot.data;
 
-            return Scaffold(
-              appBar: AppBar(
-                title: const Text('Forge'),
-                actions: [
-                  IconButton(
-                      onPressed: () => Provider.of<ThemeProvider>(context, listen: false).toggleTheme(
-                          !Provider.of<ThemeProvider>(context, listen: false).isDarkMode
-                      ),
-                      icon: Icon(
-                          Provider.of<ThemeProvider>(context, listen: false).isDarkMode
-                              ? Icons.light_mode
-                              : Icons.dark_mode
-                      )
-                  ),
+            if (character == null) {
+              return const Center(child: CircularProgressIndicator());
+            }
 
-                  IconButton(
-                      onPressed: () {
-                        // Navigate to the tasks page
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => const TasksPage()),
-                        );
-                      },
-                      icon: const Icon(Icons.task)
-                  ),
-
-                  IconButton(
-                    icon: const Icon(Icons.logout),
-                    tooltip: 'Sign out',
-                    onPressed: () => authService.signOut(),
-                  ),
-                ],
-              ),
-              body: character == null
-                  ? const Center(child: CircularProgressIndicator())
-                  : _ProfileBody(user: user, character: character),
-            );
+            return _ProfileBody(user: user, character: character);
           },
         );
       },
@@ -92,150 +61,68 @@ class _ProfileBody extends StatelessWidget {
 
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-      child: Column(
-        children: [
-          const TeamHeroesBar(),
-          // Головна колекційна картка
-          CharacterCard(user: user, character: character),
-          const SizedBox(height: 24),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 480),
+          child: Column(
+            children: [
+              // Головна колекційна картка
+              CharacterCard(user: user, character: character),
+              const SizedBox(height: 24),
 
-          // Картка статистики (використовує колір surface - Graphite)
-          Card(
-            color: theme.colorScheme.surface,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            elevation: 0, // Чистий Flat-дизайн згідно з темою
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                children: [
-                  _ProfileRow(label: 'Real Name', value: user.name),
-                  _ProfileRow(label: 'Experience', value: '${user.xp} XP'),
+              // Картка статистики (використовує колір surface - Graphite)
+              Card(
+                color: theme.colorScheme.surface,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                elevation: 0, // Чистий Flat-дизайн згідно з темою
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    children: [
+                      _ProfileRow(label: 'Real Name', value: user.name),
+                      _ProfileRow(label: 'Experience', value: '${user.xp} XP'),
 
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    child: Divider(color: softLinen.withValues(alpha: 0.2), height: 1),
-                  ),
-
-                  _ProfileRow(label: 'Active tasks', value: '${user.activeTaskCount}'),
-                  _ProfileRow(label: 'Completed tasks', value: '${user.completedTaskCount}'),
-
-                  if (character.abilities.isNotEmpty) ...[
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      child: Divider(color: softLinen.withValues(alpha: 0.2), height: 1),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 12, top: 4),
-                      child: Text(
-                        'Abilities',
-                        style: TextStyle(
-                          color: theme.colorScheme.primary, // Amethyst для підзаголовка
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 1.1,
-                        ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        child: Divider(color: softLinen.withValues(alpha: 0.2), height: 1),
                       ),
-                    ),
-                    ...character.abilities.map(
-                          (skill) =>
-                              _ProfileRow(
-                                  label: skill,
-                                  value: "Active",
-                              ),
-                    ),
-                  ],
 
-                ],
-              ),
-            ),
-          ),
+                      _ProfileRow(label: 'Active tasks', value: '${user.activeTaskCount}'),
+                      _ProfileRow(label: 'Completed tasks', value: '${user.completedTaskCount}'),
 
-          const SizedBox(height: 50,),
-        ],
-      ),
-    );
-  }
-}
-
-class TeamHeroesBar extends StatelessWidget {
-  const TeamHeroesBar({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final auth = context.read<AuthService>();
-
-    final theme = Theme.of(context);
-    final amethyst = theme.colorScheme.primary;
-    final softLinen = theme.colorScheme.secondary;
-
-    return StreamBuilder<List<Character>>(
-      stream: auth.watchAllCharacters(),
-      builder: (context, snapshot) {
-        if (!snapshot.hasData) {
-          return const SizedBox();
-        }
-
-        final heroes = snapshot.data!;
-
-        return SizedBox(
-          height: 110,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            itemCount: heroes.length,
-            itemBuilder: (context, index) {
-              final hero = heroes[index];
-
-              return Padding(
-                padding: const EdgeInsets.only(right: 12),
-                child: Column(
-                  children: [
-                    Stack(
-                      children: [
-                        CircleAvatar(
-                          radius: 30,
-                          backgroundImage:
-                          NetworkImage(hero.avatarUrl),
+                      if (character.abilities.isNotEmpty) ...[
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          child: Divider(color: softLinen.withValues(alpha: 0.2), height: 1),
                         ),
-
-                        Positioned(
-                          bottom: 0,
-                          right: 0,
-                          child: Container(
-                            padding: const EdgeInsets.all(4),
-                            decoration: BoxDecoration(
-                              color: amethyst,
-                              shape: BoxShape.circle,
-                            ),
-                            child: Text(
-                              '${hero.level}',
-                              style: TextStyle(
-                                fontSize: 10,
-                                color: softLinen,
-                                fontWeight: FontWeight.bold,
-                              ),
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 12, top: 4),
+                          child: Text(
+                            'Abilities',
+                            style: TextStyle(
+                              color: theme.colorScheme.primary, // Amethyst для підзаголовка
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 1.1,
                             ),
                           ),
                         ),
+                        ...character.abilities.map(
+                              (skill) => _ProfileRow(
+                            label: skill,
+                            value: "Active",
+                          ),
+                        ),
                       ],
-                    ),
-
-                    const SizedBox(height: 6),
-
-                    SizedBox(
-                      width: 60,
-                      child: Text(
-                        hero.name,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              );
-            },
+              ),
+
+              const SizedBox(height: 50),
+            ],
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 }
@@ -262,7 +149,6 @@ class CharacterCard extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(24),
-          // Тонка біла/soft linen рамка згідно з референсом карти
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.4),
@@ -323,24 +209,34 @@ class CharacterCard extends StatelessWidget {
                     Row(
                       children: [
                         if (user.teamId != null && user.teamId!.isNotEmpty)
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                            decoration: BoxDecoration(
-                              color: amethyst,
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: Text(
-                              user.teamId!.toUpperCase(),
-                              style: TextStyle(
-                                color: theme.colorScheme.onSurface,
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: 1.2,
-                              ),
-                            ),
+                          StreamBuilder<Team?>(
+                            stream: context.read<UserService>().watchTeam(user.teamId!),
+                            builder: (context, teamSnapshot) {
+                              final teamName = teamSnapshot.data?.name;
+                              if (teamName == null || teamName.isEmpty) {
+                                return const SizedBox();
+                              }
+                              return Padding(
+                                padding: const EdgeInsets.only(right: 8),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                                  decoration: BoxDecoration(
+                                    color: amethyst,
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: Text(
+                                    teamName.toUpperCase(),
+                                    style: TextStyle(
+                                      color: theme.colorScheme.onSurface,
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                      letterSpacing: 1.2,
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
                           ),
-                        if (user.teamId != null && user.teamId!.isNotEmpty)
-                          const SizedBox(width: 8),
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                           decoration: BoxDecoration(
@@ -378,8 +274,12 @@ class CharacterCard extends StatelessWidget {
                         // П'ять декоративних зірочок (Soft Linen) з оригінального дизайну
                         Row(
                           children: List.generate(
-                            5,
-                                (index) => Icon(Icons.star, color: softLinen, size: 16),
+                            character.level,
+                                (index) => Icon(
+                                    Icons.star,
+                                    color: amethyst,
+                                    size: 16
+                                ),
                           ),
                         ),
                       ],
@@ -448,15 +348,15 @@ class CharacterCard extends StatelessWidget {
       );
     }
 
-    final file = File(url);
-    if (file.existsSync()) {
-      return Image.file(
-        file,
-        fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) => _buildPlaceholder(theme),
-      );
+    if (!kIsWeb) {
+      final file = File(url);
+      if (file.existsSync()) {
+        return Image.file(
+          file,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) => _buildPlaceholder(theme),);
+      }
     }
-
     return _buildPlaceholder(theme);
   }
 

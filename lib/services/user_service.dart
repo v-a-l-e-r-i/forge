@@ -42,9 +42,27 @@ class UserService {
     });
   }
 
+  /// Усі герої компанії — для сторінки "Герої" (перегляд усіх/по команді).
+  /// Правило безпеки на `users` дозволяє читання всієї колекції будь-якому
+  /// залогіненому юзеру (`allow read: if request.auth != null`), тож
+  /// звичайний список без where-фільтра тут безпечний.
+  Stream<List<AppUser>> watchAllUsers() {
+    return _users.snapshots().map(
+          (snapshot) => snapshot.docs.map(AppUser.fromFirestore).toList(),
+    );
+  }
+
   Future<List<Team>> getTeams() async {
     final snapshot = await _teams.orderBy('name').get();
     return snapshot.docs.map(Team.fromFirestore).toList();
+  }
+
+  Stream<Team?> watchTeam(String teamId) {
+    if (teamId.isEmpty) return Stream.value(null);
+    return _teams.doc(teamId).snapshots().map((doc) {
+      if (!doc.exists) return null;
+      return Team.fromFirestore(doc);
+    });
   }
 
   Future<Character?> getCharacter(String uid) async {
@@ -58,5 +76,15 @@ class UserService {
       if (!doc.exists) return null;
       return Character.fromFirestore(doc);
     });
+  }
+
+  /// uid → Character для всіх героїв одразу — використовується сторінкою
+  /// "Герої", щоб не робити окремий стрім на кожен рядок списку.
+  Stream<Map<String, Character>> watchAllCharacters() {
+    return _characters.snapshots().map(
+          (snapshot) => {
+        for (final doc in snapshot.docs) doc.id: Character.fromFirestore(doc),
+      },
+    );
   }
 }
