@@ -413,7 +413,9 @@ class _HeroDetailSheet extends StatelessWidget {
         // SingleChildScrollView — щоб довгий слоган/багато abilities не
         // давали RenderFlex overflow на низьких мобільних екранах, а
         // просто скролились всередині картки.
-        child: SingleChildScrollView(child: content),
+        // SafeArea — щоб системна навігаційна панель (жести/кнопки
+        // Android) ніколи не перекривала нижню частину контенту.
+        child: SafeArea(child: SingleChildScrollView(child: content)),
       ),
     );
   }
