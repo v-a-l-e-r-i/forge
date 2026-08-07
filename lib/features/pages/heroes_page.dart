@@ -322,6 +322,7 @@ class _HeroDetailSheet extends StatelessWidget {
   final AppUser hero;
   final Character? character;
 
+
   static Future<void> show(BuildContext context, AppUser hero, Character? character) {
     return showDialog(
       context: context,
@@ -502,7 +503,7 @@ class _HeroDetailSheet extends StatelessWidget {
           children: [
             if (image != null)
               AspectRatio(
-                aspectRatio: 3 / 4,
+                aspectRatio: 5/6,
                 child: image,
               ),
             Padding(
@@ -518,7 +519,7 @@ class _HeroDetailSheet extends StatelessWidget {
     // інфо праворуч.
     return Container(
       clipBehavior: Clip.antiAlias,
-      height: 220,
+      height: 320,
       decoration: BoxDecoration(
         color: colors.surface,
         borderRadius: BorderRadius.circular(10),
