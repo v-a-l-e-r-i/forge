@@ -393,18 +393,27 @@ class _HeroDetailSheet extends StatelessWidget {
       ],
     );
 
+    // insetPadding на mobile: 16 з кожного боку => 32 забирається від
+    // ширини екрана. maxWidth рахуємо від цього, а не фіксованою половиною
+    // екрана (був баг: screenSize.width / 2 обрізав картку вдвічі).
+    final mobileInsetHorizontal = 16.0;
+    final mobileMaxWidth = screenSize.width - (mobileInsetHorizontal * 2);
+
     return Dialog(
-    backgroundColor: colors.surface,
-    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-    insetPadding: isMobile
-        ? const EdgeInsets.symmetric(horizontal: 16, vertical: 24)
-        : const EdgeInsets.symmetric(horizontal: 40, vertical: 24),
-    child: ConstrainedBox(
+      backgroundColor: colors.surface,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      insetPadding: isMobile
+          ? EdgeInsets.symmetric(horizontal: mobileInsetHorizontal, vertical: 24)
+          : const EdgeInsets.symmetric(horizontal: 40, vertical: 24),
+      child: ConstrainedBox(
         constraints: BoxConstraints(
-          maxWidth: isMobile ? screenSize.width/2: 480,
+          maxWidth: isMobile ? mobileMaxWidth : 480,
           maxHeight: screenSize.height * 0.8,
         ),
-        child: content,
+        // SingleChildScrollView — щоб довгий слоган/багато abilities не
+        // давали RenderFlex overflow на низьких мобільних екранах, а
+        // просто скролились всередині картки.
+        child: SingleChildScrollView(child: content),
       ),
     );
   }
